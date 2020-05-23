@@ -39,6 +39,18 @@ final NumberInputElement tempoElement = querySelector('#tempo')as NumberInputEle
 /// The actual tempo.
 int tempo;
 
+/// Get the minimum tempo.
+int getMinTempo() => int.tryParse(tempoElement.min);
+
+/// Get the maximum tempo.
+int getMaxTempo() => int.tryParse(tempoElement.max);
+
+/// Get the current tempo.
+int getTempo() => int.tryParse(tempoElement.value);
+
+/// Returns true if [bpm] is between [tempo.min] and [tempo.last] inclusive.
+bool validTempo(int bpm) => bpm >= getMinTempo() && bpm <= getMaxTempo();
+
 /// The tap tempo button.
 final ButtonElement tapButton = querySelector('#tap') as ButtonElement;
 
@@ -54,6 +66,8 @@ int currentBeat = 0;
 /// The metronome timer.
 Timer timer;
 
+int lastTap;
+
 /// The main function.
 void main() {
   document.title = 'Metronome';
@@ -61,8 +75,8 @@ void main() {
   output.hidden = false;
   playButton.focus();
   tempoElement.onChange.listen((Event e) {
-    tempo = int.tryParse(tempoElement.value);
-    if (tempo >= int.tryParse(tempoElement.min) && timer != null) {
+    tempo = getTempo();
+    if (validTempo(tempo) && timer != null) {
       stopTimer();
       if (buffer != null) {
         startTimer();
@@ -81,12 +95,31 @@ void main() {
         startStopMetronome();
     }
   });
+  tapButton.onClick.listen((MouseEvent e) {
+    if (lastTap != null) {
+      final int difference = DateTime.now().millisecondsSinceEpoch - lastTap;
+      // Don't do anything if they try and drop the tempo below 30 BPM.
+      //
+      // Note: This may happen accidentally, if they haven't tapped for a while.
+      final int bpm = ((60 / difference) * 1000).floor();
+      if (validTempo(bpm)) {
+        tempo = bpm;
+        tempoElement.value = bpm.toString();
+        if (timer != null) {
+          stopTimer();
+          startTimer();
+        }
+      }
+    }
+    lastTap = DateTime.now().millisecondsSinceEpoch;
+  });
 }
 
 /// Start or stop the metronome.
 void startStopMetronome() {
   tempo = int.tryParse(tempoElement.value);
   if (timer == null) {
+    currentBeat = 0;
     startTimer();
     playButton.innerText = 'Stop';
   } else {
