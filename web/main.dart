@@ -6,6 +6,8 @@ import 'dart:html';
 import 'dart:typed_data';
 import 'dart:web_audio';
 
+/// The audio buffer to use.
+AudioBuffer buffer;
 /// The audio system.
 AudioContext audio;
 
@@ -38,13 +40,13 @@ final NumberInputElement tempoElement = querySelector('#tempo')as NumberInputEle
 int tempo;
 
 /// The tap tempo button.
-final Element tap = querySelector('#tap');
+final ButtonElement tapButton = querySelector('#tap') as ButtonElement;
 
 /// The input element for the number of beats in the bar.
 final NumberInputElement beats = querySelector('#beats')as NumberInputElement;
 
 /// The play button.
-final Element play = querySelector('#play');
+final ButtonElement playButton = querySelector('#play') as ButtonElement;
 
 /// The current beat in the bar.
 int currentBeat = 0;
@@ -54,34 +56,48 @@ Timer timer;
 
 /// The main function.
 void main() {
+  document.title = 'Metronome';
   audio = AudioContext();
-  getBuffer('click.wav', (AudioBuffer buffer) {
-    document.title = 'Metronome';
-    output.hidden = false;
-    tempoElement.onChange.listen((Event e) {
-      tempo = int.tryParse(tempoElement.value);
-      if (tempo >= int.tryParse(tempoElement.min) && timer != null) {
-        stopTimer();
-        startTimer(buffer);
+  output.hidden = false;
+  playButton.focus();
+  tempoElement.onChange.listen((Event e) {
+    tempo = int.tryParse(tempoElement.value);
+    if (tempo >= int.tryParse(tempoElement.min) && timer != null) {
+      stopTimer();
+      if (buffer != null) {
+        startTimer();
       }
-    });
-    play.onClick.listen((MouseEvent e) {
-      tempo = int.tryParse(tempoElement.value);
-      if (timer == null) {
-        startTimer(buffer);
-        play.innerText = 'Stop';
-      } else {
-        stopTimer();
-        play.innerText = 'Play';
-      }
-    });
+    }
+  });
+  playButton.onClick.listen((MouseEvent e) {
+    if (buffer == null) {
+      playButton.disabled = false;
+      getBuffer('click.wav', (AudioBuffer b) {
+        buffer = b;
+        playButton.disabled = false;
+        startStopMetronome();
+      });
+    } else {
+    }
   });
 }
 
+/// Start or stop the metronome.
+void startStopMetronome() {
+  tempo = int.tryParse(tempoElement.value);
+  if (timer == null) {
+    startTimer();
+    playButton.innerText = 'Stop';
+  } else {
+    stopTimer();
+    playButton.innerText = 'Play';
+  }
+}
+
 /// Start the metronome clicking.
-void startTimer(AudioBuffer buffer) {
-  click(buffer);
-  timer = Timer.periodic(Duration(milliseconds: (1000 / (tempo / 60)).round()), (Timer t) => click(buffer));
+void startTimer() {
+  click();
+  timer = Timer.periodic(Duration(milliseconds: (1000 / (tempo / 60)).round()), (Timer t) => click());
 }
 
 /// Stop the metronome from clicking.
@@ -90,7 +106,8 @@ void stopTimer() {
   timer = null;
 }
 
-void click(AudioBuffer buffer) {
+/// Make the click sound.
+void click() {
   final int numberOfBeats = int.tryParse(beats.value);
   currentBeat++;
   if (currentBeat > numberOfBeats) {
