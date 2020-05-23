@@ -8,6 +8,7 @@ import 'dart:web_audio';
 
 /// The audio buffer to use.
 AudioBuffer buffer;
+
 /// The audio system.
 AudioContext audio;
 
@@ -71,7 +72,6 @@ int lastTap;
 /// The main function.
 void main() {
   document.title = 'Metronome';
-  audio = AudioContext();
   output.hidden = false;
   playButton.focus();
   tempoElement.onChange.listen((Event e) {
@@ -86,6 +86,7 @@ void main() {
   playButton.onClick.listen((MouseEvent e) {
     if (buffer == null) {
       playButton.disabled = false;
+      audio = AudioContext();
       getBuffer('click.wav', (AudioBuffer b) {
         buffer = b;
         playButton.disabled = false;

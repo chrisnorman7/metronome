@@ -1102,7 +1102,6 @@ W.aF(t,"load",H.e(new U.cd(t,b,a),{func:1,ret:-1,args:[u]}),!1,u)
 t.send()},
 dh:function(){var u,t,s
 document.title="Metronome"
-$.c8=new (window.AudioContext||window.webkitAudioContext)()
 $.dA().hidden=!1
 u=$.aq()
 u.focus()
@@ -1950,6 +1949,7 @@ $S:21}
 U.ck.prototype={
 $1:function(a){H.j(a,"$iw")
 if($.c9==null){$.aq().disabled=!1
+$.c8=new (window.AudioContext||window.webkitAudioContext)()
 U.ew("click.wav",new U.ci())}else U.dk()},
 $S:8}
 U.ci.prototype={
