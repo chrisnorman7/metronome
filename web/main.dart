@@ -78,6 +78,7 @@ void main() {
         startStopMetronome();
       });
     } else {
+        startStopMetronome();
     }
   });
 }
